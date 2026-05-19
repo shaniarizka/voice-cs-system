@@ -2,20 +2,73 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
-# Load .env
+# =========================
+# LOAD ENV
+# =========================
+
 load_dotenv()
 
-# Ambil API Key
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-# Konfigurasi Gemini
+# =========================
+# CONFIG GEMINI
+# =========================
+
 genai.configure(api_key=API_KEY)
 
-# Model Gemini
 model = genai.GenerativeModel("gemini-2.5-flash")
 
+# =========================
+# FALLBACK RESPONSE
+# =========================
+
+def fallback_response(user_text):
+
+    text = user_text.lower()
+
+    # flight
+    if "flight" in text or "fly" in text or "jeddah" in text:
+
+        return (
+            "Baik, aku bisa bantu arrange flight "
+            "ke Jeddah minggu depan."
+        )
+
+    # visa
+    elif "visa" in text:
+
+        return (
+            "Untuk visa Saudi, biasanya diperlukan "
+            "paspor aktif dan dokumen umrah."
+        )
+
+    # transport
+    elif "transport" in text or "madinah" in text:
+
+        return (
+            "Baik, aku bisa bantu carikan transport "
+            "dari Jeddah ke Madinah."
+        )
+
+    # hotel
+    elif "hotel" in text or "makkah" in text:
+
+        return (
+            "Aku bisa bantu rekomendasikan hotel "
+            "dekat Haram sesuai budget."
+        )
+
+    # default
+    else:
+
+        return "Maaf, saya belum memahami permintaan tersebut."
+
+# =========================
+# GENERATE RESPONSE
+# =========================
 
 def generate_response(user_text, mode="preserve"):
+
     """
     Generate response dari Gemini
     """
@@ -45,8 +98,28 @@ User:
 """
 
     else:
+
         raise ValueError("Mode tidak valid")
 
-    response = model.generate_content(prompt)
+    # =========================
+    # TRY GEMINI
+    # =========================
 
-    return response.text.strip()
+    try:
+
+        print("\n[INFO] Menggunakan Gemini API...")
+
+        response = model.generate_content(prompt)
+
+        return response.text.strip()
+
+    # =========================
+    # FALLBACK
+    # =========================
+
+    except Exception as e:
+
+        print("\n[WARNING] Gemini gagal, menggunakan fallback response.")
+        print(e)
+
+        return fallback_response(user_text)
