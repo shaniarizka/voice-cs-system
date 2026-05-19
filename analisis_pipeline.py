@@ -1,9 +1,10 @@
 import os
 import json
+import time
 import pandas as pd
 
 from jiwer import wer, cer
-
+from app.tts import text_to_speech
 from app.stt import transcribe_audio
 from app.llm import generate_response
 
@@ -15,6 +16,13 @@ AUDIO_DIR = "data/corpus/audio"
 GROUND_TRUTH_PATH = "data/corpus/transcripts/ground_truth.json"
 
 # =========================
+# CONFIG
+# =========================
+
+USE_LLM = True
+LLM_MODE = "preserve"
+
+# =========================
 # LOAD GROUND TRUTH
 # =========================
 
@@ -22,6 +30,13 @@ with open(GROUND_TRUTH_PATH, "r", encoding="utf-8") as f:
     ground_truth_data = json.load(f)
 
 results = []
+
+success_count = 0
+failed_count = 0
+
+OUTPUT_DIR = "outputs"
+os.makedirs(OUTPUT_DIR, exist_ok=True)
+
 
 # =========================
 # LOOP ALL AUDIO FILES
@@ -84,6 +99,12 @@ for filename in os.listdir(AUDIO_DIR):
         print("GROUND TRUTH TIDAK DITEMUKAN:", filename)
 
     # =========================
+    # START TIMER
+    # =========================
+
+    start_time = time.time()
+
+    # =========================
     # STT
     # =========================
 
@@ -95,8 +116,10 @@ for filename in os.listdir(AUDIO_DIR):
 
         print("STT Error:", e)
         transcript = ""
+        failed_count += 1
 
     print("TRANSCRIPT   :", transcript)
+    success_count += 1
 
     # =========================
     # EVALUATION
@@ -118,16 +141,53 @@ for filename in os.listdir(AUDIO_DIR):
     # LLM
     # =========================
 
+    if USE_LLM:
+
+        try:
+
+            response = generate_response(
+                transcript,
+                mode=LLM_MODE
+            )
+
+        except Exception as e:
+
+            response = f"LLM Error: {e}"
+
+    else:
+
+        response = "[LLM DISABLED]"
+
+    print("RESPONSE     :", response)
+    print(f"LATENCY      : {latency:.2f} sec")
+
+    # =========================
+    # TTS
+    # =========================
+
+    output_audio_path = os.path.join(
+        OUTPUT_DIR,
+        f"{audio_id}_response.wav"
+    )
+
     try:
 
-        response = generate_response(
-            transcript,
-            mode="preserve"
+        text_to_speech(
+            response,
+            output_audio_path
         )
 
     except Exception as e:
 
-        response = f"LLM Error: {e}"
+        print("TTS Error:", e)
+
+    # =========================
+    # END TIMER
+    # =========================
+
+    end_time = time.time()
+
+    latency = end_time - start_time
 
     # =========================
     # SAVE RESULT
@@ -144,7 +204,10 @@ for filename in os.listdir(AUDIO_DIR):
         "wer": round(wer_score, 3),
         "cer": round(cer_score, 3),
 
-        "response": response
+        "response": response,
+        "latency": round(latency, 2),
+        "llm_mode": LLM_MODE,
+        "llm_enabled": USE_LLM
     })
 
 # =========================
@@ -174,6 +237,11 @@ if len(results_df) > 0:
 
     avg_wer = results_df["wer"].mean()
     avg_cer = results_df["cer"].mean()
+    avg_latency = results_df["latency"].mean()
 
     print(f"\nAverage WER: {avg_wer:.3f}")
     print(f"Average CER: {avg_cer:.3f}")
+    print(f"Average Latency: {avg_latency:.2f} sec")
+
+    print(f"Successful files: {success_count}")
+    print(f"Failed files    : {failed_count}")

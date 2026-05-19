@@ -1,6 +1,7 @@
-import google.generativeai as genai
+from google import genai
 from dotenv import load_dotenv
 import os
+import time
 
 # =========================
 # LOAD ENV
@@ -11,12 +12,12 @@ load_dotenv()
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 # =========================
-# CONFIG GEMINI
+# GEMINI CLIENT
 # =========================
 
-genai.configure(api_key=API_KEY)
-
-model = genai.GenerativeModel("gemini-2.5-flash")
+client = genai.Client(
+    api_key=API_KEY
+)
 
 # =========================
 # FALLBACK RESPONSE
@@ -96,7 +97,18 @@ dan hindari code-switching.
 User:
 {user_text}
 """
+    elif mode == "translate":
 
+        prompt = f"""
+    Kamu adalah assistant multilingual.
+
+    Terjemahkan seluruh input menjadi Bahasa Inggris
+    yang natural dan mudah dipahami.
+
+    User:
+    {user_text}
+"""
+    
     else:
 
         raise ValueError("Mode tidak valid")
@@ -109,7 +121,10 @@ User:
 
         print("\n[INFO] Menggunakan Gemini API...")
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt
+        )
 
         return response.text.strip()
 
@@ -119,7 +134,12 @@ User:
 
     except Exception as e:
 
-        print("\n[WARNING] Gemini gagal, menggunakan fallback response.")
+        print("\n[WARNING] Gemini gagal.")
         print(e)
+
+        # tunggu sebentar jika quota/rate limit
+        time.sleep(5)
+
+        print("[INFO] Menggunakan fallback response...")
 
         return fallback_response(user_text)
