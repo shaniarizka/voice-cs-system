@@ -27,8 +27,15 @@ def fallback_response(user_text):
 
     text = user_text.lower()
 
-    # flight
-    if "flight" in text or "fly" in text or "jeddah" in text:
+    # flight# flight
+    if (
+        "flight" in text
+        or "fly" in text
+        or "jeddah" in text
+        or "jadah" in text
+        or "book" in text
+        or "schedule" in text
+    ):
 
         return (
             "Baik, aku bisa bantu arrange flight "
@@ -36,7 +43,10 @@ def fallback_response(user_text):
         )
 
     # visa
-    elif "visa" in text:
+    elif (
+        "visa" in text
+        or "saudi" in text
+    ):
 
         return (
             "Untuk visa Saudi, biasanya diperlukan "
@@ -44,7 +54,11 @@ def fallback_response(user_text):
         )
 
     # transport
-    elif "transport" in text or "madinah" in text:
+    elif (
+        "transport" in text
+        or "madinah" in text
+        or "transportasi" in text
+    ):
 
         return (
             "Baik, aku bisa bantu carikan transport "
@@ -52,7 +66,11 @@ def fallback_response(user_text):
         )
 
     # hotel
-    elif "hotel" in text or "makkah" in text:
+    elif (
+        "hotel" in text
+        or "makkah" in text
+        or "haram" in text
+    ):
 
         return (
             "Aku bisa bantu rekomendasikan hotel "
@@ -122,11 +140,17 @@ User:
         print("\n[INFO] Menggunakan Gemini API...")
 
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "timeout": 20
+        }
+    )
 
-        return response.text.strip()
+        return {
+            "text": response.text.strip(),
+            "source": "gemini"
+        }
 
     # =========================
     # FALLBACK
@@ -142,4 +166,7 @@ User:
 
         print("[INFO] Menggunakan fallback response...")
 
-        return fallback_response(user_text)
+        return {
+            "text": fallback_response(user_text),
+            "source": "fallback"
+        }

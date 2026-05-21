@@ -21,6 +21,7 @@ GROUND_TRUTH_PATH = "data/corpus/transcripts/ground_truth.json"
 
 USE_LLM = True
 LLM_MODE = "preserve"
+USE_TTS = False
 
 # =========================
 # LOAD GROUND TRUTH
@@ -119,7 +120,15 @@ for filename in os.listdir(AUDIO_DIR):
         failed_count += 1
 
     print("TRANSCRIPT   :", transcript)
-    success_count += 1
+
+    if transcript.strip():
+        success_count += 1
+    else:
+        failed_count += 1
+
+    if not transcript.strip():
+        print("TRANSCRIPT KOSONG, skip file.")
+        continue    
 
     # =========================
     # EVALUATION
@@ -145,49 +154,56 @@ for filename in os.listdir(AUDIO_DIR):
 
         try:
 
-            response = generate_response(
+            llm_result = generate_response(
                 transcript,
                 mode=LLM_MODE
             )
 
+            response = llm_result["text"]
+            llm_source = llm_result["source"]
+
         except Exception as e:
 
             response = f"LLM Error: {e}"
+            llm_source = "error"
 
     else:
 
         response = "[LLM DISABLED]"
 
     print("RESPONSE     :", response)
-    print(f"LATENCY      : {latency:.2f} sec")
+    print("LLM SOURCE   :", llm_source)
 
     # =========================
     # TTS
     # =========================
 
-    output_audio_path = os.path.join(
-        OUTPUT_DIR,
-        f"{audio_id}_response.wav"
-    )
+    if USE_TTS:
 
-    try:
-
-        text_to_speech(
-            response,
-            output_audio_path
+        output_audio_path = os.path.join(
+            OUTPUT_DIR,
+            f"{audio_id}_response.wav"
         )
 
-    except Exception as e:
+        try:
 
-        print("TTS Error:", e)
+            text_to_speech(
+                response,
+                output_audio_path
+            )
 
+        except Exception as e:
+
+            print("TTS Error:", e)
+            
     # =========================
-    # END TIMER
+    # LATENCY
     # =========================
 
     end_time = time.time()
-
     latency = end_time - start_time
+
+    print(f"LATENCY      : {latency:.2f} sec")
 
     # =========================
     # SAVE RESULT
@@ -203,9 +219,9 @@ for filename in os.listdir(AUDIO_DIR):
 
         "wer": round(wer_score, 3),
         "cer": round(cer_score, 3),
-
-        "response": response,
         "latency": round(latency, 2),
+        "response": response,
+        "llm_source": llm_source,
         "llm_mode": LLM_MODE,
         "llm_enabled": USE_LLM
     })
@@ -218,13 +234,21 @@ os.makedirs("logs", exist_ok=True)
 
 results_df = pd.DataFrame(results)
 
-output_csv = "logs/evaluation_results.csv"
+output_csv = f"logs/evaluation_{LLM_MODE}.csv"
 
 results_df.to_csv(
     output_csv,
     index=False,
     encoding="utf-8-sig"
 )
+
+results_df["response_length"] = (
+    results_df["response"]
+    .astype(str)
+    .apply(len)
+)
+avg_response_length = results_df["response_length"].mean()
+print(f"Average Response Length: {avg_response_length:.2f}")
 
 # =========================
 # SUMMARY
