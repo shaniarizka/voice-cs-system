@@ -95,26 +95,32 @@ def generate_response(user_text, mode="preserve"):
     if mode == "preserve":
 
         prompt = f"""
-Kamu adalah assistant multilingual.
+        Kamu adalah assistant multilingual.
+        Balas secara singkat, natural, dan conversational.
+        Maksimal 2 kalimat pendek.
+        Pertahankan pola code-switching pengguna
+        (ID-EN-AR) secara natural.
+        Jangan membuat penjelasan panjang,
+        bullet point,
+        atau paragraf panjang.
 
-Balas dengan mempertahankan pola code-switching pengguna
-(ID-EN-AR) secara natural.
-
-User:
-{user_text}
-"""
+        User:
+        {user_text}
+        """
 
     elif mode == "normalize":
 
         prompt = f"""
-Kamu adalah assistant multilingual.
+        Kamu adalah assistant multilingual.
+        Balas singkat maksimal 2 kalimat.
+        Gunakan Bahasa Indonesia formal
+        dan hindari code-switching
+        Jangan membuat daftar panjang
+        atau penjelasan detail.
 
-Ubah seluruh respon menjadi Bahasa Indonesia formal
-dan hindari code-switching.
-
-User:
-{user_text}
-"""
+        User:
+        {user_text}
+        """
     elif mode == "translate":
 
         prompt = f"""
@@ -142,9 +148,6 @@ User:
         response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
-        config={
-            "timeout": 20
-        }
     )
 
         return {

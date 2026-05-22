@@ -20,8 +20,8 @@ GROUND_TRUTH_PATH = "data/corpus/transcripts/ground_truth.json"
 # =========================
 
 USE_LLM = True
-LLM_MODE = "preserve"
-USE_TTS = False
+USE_TTS = True
+LLM_MODE = "normalize"
 
 # =========================
 # LOAD GROUND TRUTH
@@ -180,9 +180,10 @@ for filename in os.listdir(AUDIO_DIR):
 
     if USE_TTS:
 
+        base_name = os.path.splitext(filename)[0]
         output_audio_path = os.path.join(
             OUTPUT_DIR,
-            f"{audio_id}_response.wav"
+            f"{base_name}_{LLM_MODE}_response.wav"
         )
 
         try:
@@ -195,7 +196,7 @@ for filename in os.listdir(AUDIO_DIR):
         except Exception as e:
 
             print("TTS Error:", e)
-            
+
     # =========================
     # LATENCY
     # =========================
