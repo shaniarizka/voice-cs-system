@@ -21,7 +21,7 @@ GROUND_TRUTH_PATH = "data/corpus/transcripts/ground_truth.json"
 
 USE_LLM = True
 USE_TTS = True
-LLM_MODE = "preserve"
+LLM_MODE = "normalize"
 
 # =========================
 # LOAD GROUND TRUTH
