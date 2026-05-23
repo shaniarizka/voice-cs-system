@@ -21,7 +21,7 @@ GROUND_TRUTH_PATH = "data/corpus/transcripts/ground_truth.json"
 
 USE_LLM = True
 USE_TTS = True
-LLM_MODE = "normalize"
+LLM_MODE = "preserve"
 
 # =========================
 # LOAD GROUND TRUTH
@@ -40,7 +40,7 @@ os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 # =========================
-# LOOP ALL AUDIO FILES
+# LOOP SEMUA AUDIO 
 # =========================
 
 for filename in os.listdir(AUDIO_DIR):
@@ -53,14 +53,6 @@ for filename in os.listdir(AUDIO_DIR):
 
     audio_path = os.path.join(AUDIO_DIR, filename)
 
-    # =========================
-    # EXTRACT AUDIO ID
-    # =========================
-    # contoh:
-    # 2305_audio18.wav
-    # 2306_Audio01.wav
-    # 999_AUDIO7.wav
-    # -> audio18 / audio01 / audio07
 
     try:
 
@@ -131,7 +123,7 @@ for filename in os.listdir(AUDIO_DIR):
         continue    
 
     # =========================
-    # EVALUATION
+    # EVALUASI
     # =========================
 
     try:
