@@ -8,7 +8,6 @@ import time
 # =========================
 
 load_dotenv()
-
 API_KEY = os.getenv("GEMINI_API_KEY")
 
 # =========================
@@ -24,9 +23,7 @@ client = genai.Client(
 # =========================
 
 def fallback_response(user_text):
-
     text = user_text.lower()
-
     # flight# flight
     if (
         "flight" in text
@@ -59,7 +56,6 @@ def fallback_response(user_text):
         or "madinah" in text
         or "transportasi" in text
     ):
-
         return (
             "Baik, aku bisa bantu carikan transport "
             "dari Jeddah ke Madinah."
@@ -71,7 +67,6 @@ def fallback_response(user_text):
         or "makkah" in text
         or "haram" in text
     ):
-
         return (
             "Aku bisa bantu rekomendasikan hotel "
             "dekat Haram sesuai budget."
@@ -79,7 +74,6 @@ def fallback_response(user_text):
 
     # default
     else:
-
         return "Maaf, saya belum memahami permintaan tersebut."
 
 # =========================
@@ -87,13 +81,10 @@ def fallback_response(user_text):
 # =========================
 
 def generate_response(user_text, mode="preserve"):
-
     """
     Generate response dari Gemini
     """
-
     if mode == "preserve":
-
         prompt = f"""
         Kamu adalah assistant multilingual.
         Balas secara singkat, natural, dan conversational.
@@ -103,13 +94,10 @@ def generate_response(user_text, mode="preserve"):
         Jangan membuat penjelasan panjang,
         bullet point,
         atau paragraf panjang.
-
         User:
         {user_text}
         """
-
     elif mode == "normalize":
-
         prompt = f"""
         Kamu adalah assistant multilingual.
         Balas singkat maksimal 2 kalimat.
@@ -117,24 +105,20 @@ def generate_response(user_text, mode="preserve"):
         dan hindari code-switching
         Jangan membuat daftar panjang
         atau penjelasan detail.
-
         User:
         {user_text}
         """
     elif mode == "translate":
-
         prompt = f"""
     Kamu adalah assistant multilingual.
 
     Terjemahkan seluruh input menjadi Bahasa Inggris
     yang natural dan mudah dipahami.
-
     User:
     {user_text}
 """
     
     else:
-
         raise ValueError("Mode tidak valid")
 
     # =========================
@@ -142,14 +126,11 @@ def generate_response(user_text, mode="preserve"):
     # =========================
 
     try:
-
         print("\n[INFO] Menggunakan Gemini API...")
-
         response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=prompt,
     )
-
         return {
             "text": response.text.strip(),
             "source": "gemini"
@@ -160,15 +141,10 @@ def generate_response(user_text, mode="preserve"):
     # =========================
 
     except Exception as e:
-
         print("\n[WARNING] Gemini gagal.")
         print(e)
-
-        # tunggu sebentar jika quota/rate limit
         time.sleep(5)
-
         print("[INFO] Menggunakan fallback response...")
-
         return {
             "text": fallback_response(user_text),
             "source": "fallback"
